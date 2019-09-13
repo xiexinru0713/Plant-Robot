@@ -31,7 +31,7 @@ app.post('/linewebhook', linebotParser);
 bot.on('message', function (event) {
   if (event.message.type === 'text') {
     let lineId = event.source.userId
-    let ref = firebase.database().ref(`users/${lineId}/steps`)
+    let ref = firebase.database().ref(`user_device/${lineId}/step`)
     let msg = event.message.text
 
 
@@ -45,6 +45,12 @@ bot.on('message', function (event) {
               event.reply(`可以告訴我你的植物種類嗎？`)
               break;
             case 1:
+              if(msg == "向日葵") { 
+                updateData(lineId, "dhtStandard", 90)
+              } 
+              else {
+                updateData(lineId, "dhtStandard", 50)
+              }
               updateData(lineId, "plantType", msg)
               event.reply('謝謝接下來我們馬上就可以開始使用了！！輸入OK取得資訊!!!!!!!')
               break;
@@ -61,8 +67,8 @@ bot.on('message', function (event) {
                   event.reply('i cant do this')
               }
           }
-          if (step > 1) { updateData(lineId, "steps", 99) }
-          else { updateData(lineId, "steps", step + 1) }
+          if (step > 1) { updateData(lineId, "step", 99) }
+          else { updateData(lineId, "step", step + 1) }
         }
         else {
             console.log('init')
@@ -73,6 +79,37 @@ bot.on('message', function (event) {
   }
 });
 
+//這裡開始------------------------------------------------------------
+function getTodayDate() {
+  var fullDate = new Date();
+  var yyyy = fullDate.getFullYear();
+  var MM = (fullDate.getMonth() + 1) >= 10 ? (fullDate.getMonth() + 1) : ("0" + (fullDate.getMonth() + 1));
+  var dd = fullDate.getDate() < 10 ? ("0"+fullDate.getDate()) : fullDate.getDate();
+  var today = yyyy + "-" + MM + "-" + dd;
+  return today;
+}
+
+var temperture,humidity,envirHour,dht,soilHour;
+firebase.database().ref('/environment_condition/123/' + getTodayDate() + "/" + loginUser.uid).on('value', function (snapshot) {
+	envirHour = snapshot.val().hour;
+	humidity = snapshot.val().humidity;
+	temperture = snapshot.val().temperture;
+	console.log("環境狀態抓取時間(hr):" + envirHour);
+	console.log("環境濕度:" + humidity);
+	console.log("環境溫度:" + temperture);
+});
+
+firebase.database().ref('/plant_condition/123/' + getTodayDate() + "/" + loginUser.uid).on('value', function (snapshot) {
+	dht = snapshot.val().dht;
+	soilHour = snapshot.val().hour;
+	console.log("土壤濕度:" + dht);
+	console.log("土壤狀態抓取時間(hr):" + soilHour);
+});
+
+
+//---------------------------------------------------------------------
+
+
 
 app.listen(process.env.PORT || 80, function () {
   console.log('LineBot is running.');
@@ -80,18 +117,19 @@ app.listen(process.env.PORT || 80, function () {
 
 let updateData = (lineId, postKey, postData) => {
     let updates = {};
-    updates[`users/${lineId}/${postKey}`] = postData;
+    updates[`user_device/${lineId}/${postKey}`] = postData;
   
     return firebase.database().ref().update(updates);
 }
 
 let initData = (lineId) => {
-    firebase.database().ref('users/' + lineId).set({
+    firebase.database().ref('user_device/' + lineId).set({
         deviceId: 0,
-        plantType: 0,
+        dhtStandard: 0,
         name : 0,
-        dht : 0,
-        temperature : 0,
-        steps : 0
+        plantType : 0,
+        step : 0,
+        waterTime : 0
     });
 }
+
