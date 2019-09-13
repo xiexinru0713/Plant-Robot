@@ -1,0 +1,16 @@
+{
+  "name": "pr_refine",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ."
+  },
+  "author": "syan6010",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.4",
+    "firebase": "^5.9.2",
+    "linebot": "^1.4.1"
+  }
+}
